@@ -99,7 +99,7 @@ void main(void) {
 }*/
 
 /***OMP_EX5***/
-
+/*
 #include "stdafx.h"
 #include <stdio.h>
 #include <cstdio>
@@ -128,7 +128,7 @@ void main()
 	avg = avg / N;
 	printf("Average = %f \n", avg);
 	std::getchar();
-}
+}*/
 
 
 /***OMP_EX6****/
@@ -194,3 +194,167 @@ double Trap(double a, double b, int n, int thread_count) {
 
 	return approx;
 }*/
+
+
+/***OMP_EX7****/
+/* Purpose: Estimate definite integral (or area under curve) using the
+*          trapezoidal rule.  This version uses a parallel for directive
+*/
+/*
+#include "stdafx.h"
+#include <cstdio>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <omp.h>
+
+void Usage(char* prog_name);
+
+double f(double x);
+double Trap(double a, double b, int n, int thread_count);
+
+int main(int argc, char* argv[]) {
+double  global_result = 0.0;
+double  a, b;
+int     n;
+int     thread_count;
+double aproxArea=0.0;
+
+if (argc != 2) Usage(argv[0]);
+thread_count = strtol(argv[1], NULL, 10);
+printf("Enter a, b, and n\n");
+scanf_s("%lf %lf %d", &a, &b, &n);
+
+aproxArea = Trap(a, b, n, thread_count);
+printf("area = %f \n", aproxArea);
+return 0;
+//std::getchar();
+}  /* main */
+
+/*
+void Usage(char* prog_name) {
+
+fprintf(stderr, "usage: %s <number of threads>\n", prog_name);
+exit(0);
+}
+
+
+double f(double x) {
+double return_val;
+
+return_val = 4/(1+x*x);
+return return_val;
+}
+
+double Trap(double a, double b, int n, int thread_count) {
+double  h, approx;
+int  i;
+h = (b - a) / n;
+approx = (f(a) + f(b)) / 2.0;
+#pragma omp parallel for num_threads(thread_count) reduction(+: approx)
+for (i = 1; i <= n - 1; i++)
+approx += f(a + i*h);
+
+approx = h*approx;
+
+return approx;
+}*/
+
+
+/***lab1_p1b****/
+/* Purpose: Estimate definite integral (or area under curve) using the
+*          trapezoidal rule.  This version uses a parallel for directive
+*/
+
+
+#include "stdafx.h"
+#include <cstdio>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <omp.h>
+
+#define n 1000000000
+double dx;
+
+
+double f(double x) {
+	double return_val;
+
+	return_val = 4 / (1 + x*x);
+	return return_val;
+}
+
+void Pi_serial()
+{
+	int i;
+	double x, piC, sum;
+	double start_time, run_time = 0.0;
+
+	printf("Running serial version... \n");
+	start_time = omp_get_wtime();
+
+	sum = 3;
+	/*Ciclo para calcular el área*/
+
+	for (i = 1; i <= n - 1; i++)
+	{
+		x = i*(double)dx;
+		sum += 4 / (x*x + 1);
+	}
+	piC = sum*(double)dx;
+
+	run_time += omp_get_wtime() - start_time;
+	printf("Pi with %d steps is : %f in : %f seconds. \n\n", n, piC, run_time);
+}
+
+void Pi_Paralelo(int NUM_THREADS)
+{
+	int i;
+	double x, piC = 0, sum;
+	double start_time, run_time = 0.0;
+
+
+	printf("Running parallel version... \n");
+
+	start_time = omp_get_wtime();
+	omp_set_num_threads(NUM_THREADS);
+
+	// Your parallel code here...
+	double b; double a;
+	b = 1;
+	a = 0;
+	//piC = (f(a) + f(b)) / 2.0;
+
+	sum = (4 + 2) / 2;
+
+	#pragma omp parallel for private(x) reduction(+: piC)
+	for (i = 1; i <= n - 1; i++)
+	{
+		x = 0 + i*dx;
+		sum += 4.0 / (1.0 + x*x);
+		//piC += f(a + i*dx);
+	}
+	piC = dx*sum;
+	//piC = dx*piC;
+
+
+	run_time += omp_get_wtime() - start_time;
+	printf("Pi with %d steps and %d threads is : %f in : %f seconds. \n\n", n, NUM_THREADS, piC, run_time);
+}
+
+void main()
+{
+	printf("Introduccion a la Computacion de Alto Rendimiento \n");
+	printf("             Laboratorio 1 - OpenMP \n\n");
+	printf("Pregunta 1: Calculo del valor de Pi por integracion numerica: \n\n");
+
+	dx = 1.0 / (double)n;
+	Pi_serial();		// Version Serial
+	for (int i = 2; i <= 8; i++)
+	{
+		Pi_Paralelo(i);		// Version Paralela
+	}
+	std::getchar();
+
+}
