@@ -1,0 +1,85 @@
+/*Ejemplo 1*/
+/*
+#include "stdafx.h"
+#include <cstdio>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <mpi.h>  
+
+void main(int argc, char* argv[])
+{
+	int rank, size;
+
+	MPI_Init(&argc, &argv);
+
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+	printf("Hello, from process %d of %d!\n", rank, size);
+
+	MPI_Finalize();
+
+	//std::getchar();
+
+}*/
+
+/*Ejemplo 2*/
+/*Notar que el proceso 0 espera  a que le lleguen los dem´s mernsajes
+ y los demás procesos envian sus mensajes aunque el proceso 0 aún no se esté ejecutando*/
+
+#include "stdafx.h"
+#include <cstdio>
+#include <stdio.h>
+#include <string.h>  /* For strlen             */
+#include <stdlib.h>
+#include <math.h>
+#include <mpi.h>
+
+const int MAX_STRING = 100;
+int  globalvar = 0;
+
+void main(void) {
+	char greeting[MAX_STRING];  /* String storing message */
+	int comm_sz;               /* Number of processes    */
+	int my_rank;               /* My process rank        */
+	int q;
+
+	/* Start up MPI */
+	MPI_Init(NULL, NULL);
+
+	/* Get the number of processes */
+	MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
+
+	/* Get my rank among all the processes */
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+	printf("I'm the first process process %d of %d!\n", my_rank, comm_sz);
+
+	if (my_rank != 0)
+	{
+		/* Create message */
+		globalvar += my_rank;
+		sprintf(greeting, "Greetings from process %d of %d!", my_rank, comm_sz);
+		/* Send message to process 0 */
+		MPI_Send(greeting, strlen(greeting) + 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+
+		printf("process %d  myglobal var = %d\n", my_rank, globalvar);
+	}
+	else
+	{
+		printf("process %d  myglobal var = %d\n", my_rank, globalvar);
+		/* Print my message */
+		printf("Greetings from process %d of %d!\n", my_rank, comm_sz);
+		for (q = 1; q < comm_sz; q++)
+		{
+			/* Receive message from process q */
+			MPI_Recv(greeting, MAX_STRING, MPI_CHAR, q, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			/* Print message from process q */
+			printf("%s\n", greeting);
+		}
+	}
+
+	/* Shut down MPI */
+	MPI_Finalize();
+}
