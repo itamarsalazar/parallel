@@ -1,0 +1,2 @@
+Para ejecutar programa MPI desde CMD ejecutar:
+mpiexec -n 1024 ConsoleApplicaction
